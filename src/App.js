@@ -23,17 +23,16 @@ import ReportForm from './components/ReportForm';
 import ReportStatus from './components/ReportStatus';
 import { SocketProvider, useSocket } from './contexts/SocketContext';
 
-// Создаем тему с красной цветовой схемой
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#d32f2f', // Яркий красный
+      main: '#d32f2f',
       light: '#ff6659',
       dark: '#9a0007',
       contrastText: '#ffffff'
     },
     secondary: {
-      main: '#ff1744', // Акцентный красный
+      main: '#ff1744',
       light: '#ff616f',
       dark: '#c4001d',
       contrastText: '#ffffff'

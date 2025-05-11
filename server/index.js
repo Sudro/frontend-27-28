@@ -17,12 +17,10 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Хранилище для кэширования результатов
 const cache = new Map();
-// Хранилище для UUID репортов
+
 const reportUUIDs = new Set();
 
-// Функция для проверки репутации URL через VirusTotal
 async function checkVirusTotal(url) {
   try {
     const response = await axios.get(`https://www.virustotal.com/vtapi/v2/url/report`, {
@@ -32,7 +30,6 @@ async function checkVirusTotal(url) {
       }
     });
     
-    // Проверяем наличие тестовых паттернов в URL
     const isTestUrl = url.includes('malware.testing.google.test') || 
                      url.includes('phishing.testing.google.test');
     
@@ -52,10 +49,8 @@ async function checkVirusTotal(url) {
   }
 }
 
-// Функция для проверки репутации URL через Urlscan
 async function checkUrlscan(url) {
   try {
-    // Проверяем наличие тестовых паттернов в URL
     const isTestUrl = url.includes('malware.testing.google.test') || 
                      url.includes('phishing.testing.google.test');
     
@@ -92,7 +87,6 @@ async function checkUrlscan(url) {
   }
 }
 
-// Функция для получения статуса репорта через Netcraft
 async function getNetcraftReportStatus(submissionId) {
   try {
     console.log('Получение статуса репорта:', submissionId);
@@ -124,14 +118,12 @@ async function getNetcraftReportStatus(submissionId) {
   }
 }
 
-// Функция для отправки репорта через Netcraft
 async function submitNetcraftReport(url, reportData) {
   console.log('Начало отправки репорта:');
   console.log('URL:', url);
   console.log('Данные репорта:', reportData);
 
   try {
-    // Проверяем наличие тестовых паттернов в URL
     const isTestUrl = url.includes('malware.testing.google.test') || 
                      url.includes('phishing.testing.google.test');
     
@@ -173,7 +165,6 @@ async function submitNetcraftReport(url, reportData) {
     
     console.log('Ответ от Netcraft:', response.data);
 
-    // Получаем статус репорта
     const submissionId = response.data.uuid;
     console.log('Получен UUID репорта:', submissionId);
     
@@ -210,19 +201,16 @@ async function submitNetcraftReport(url, reportData) {
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  // Отправляем список UUID при подключении
   socket.emit('reportUUIDs', Array.from(reportUUIDs));
 
   socket.on('checkUrl', async (url) => {
     console.log('Получен запрос на проверку URL:', url);
-    // Проверяем кэш
     const cachedResult = cache.get(url);
     if (cachedResult && Date.now() - cachedResult.timestamp < 12 * 60 * 60 * 1000) {
       socket.emit('urlResult', cachedResult.data);
       return;
     }
 
-    // Получаем данные о репутации от сервисов
     const [vtResult, urlscanResult] = await Promise.all([
       checkVirusTotal(url),
       checkUrlscan(url)
@@ -239,7 +227,6 @@ io.on('connection', (socket) => {
       reportStatus: null
     };
 
-    // Сохраняем в кэш
     cache.set(url, {
       data: result,
       timestamp: Date.now()
@@ -253,14 +240,11 @@ io.on('connection', (socket) => {
     console.log('URL:', url);
     console.log('Данные репорта:', reportData);
 
-    // Отправляем репорт в Netcraft
     const netcraftResult = await submitNetcraftReport(url, reportData);
     console.log('Результат отправки репорта:', netcraftResult);
 
     if (netcraftResult.success && netcraftResult.data.submissionId) {
-      // Добавляем UUID в хранилище
       reportUUIDs.add(netcraftResult.data.submissionId);
-      // Отправляем обновленный список всем клиентам
       io.emit('reportUUIDs', Array.from(reportUUIDs));
     }
 
@@ -268,7 +252,6 @@ io.on('connection', (socket) => {
       netcraft: netcraftResult
     };
 
-    // Обновляем кэш
     const cachedResult = cache.get(url);
     if (cachedResult) {
       cachedResult.data.reportStatus = reportStatus;
