@@ -4,10 +4,10 @@
 npm install
 cd server && npm install
 ```
-После установки нужно создать и заполнить файл .env
+После установки нужно создать и заполнить файл .env в директории server
 
 
-Пример файла .env
+Пример файла server/.env
 ```
 PORT=5001
 VIRUSTOTAL_API_KEY=d24520b3be98c9aeb10dfd529602
